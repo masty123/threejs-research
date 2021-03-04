@@ -22,7 +22,16 @@
     <script src="OrbitControls.js"></script>
 
     <script>
-        let scene, camera, renderer, controls;
+        let scene, camera, renderer, controls, car;
+        const mouse = new THREE.Vector3();
+
+        function onMouseDown( event ) {
+            // calculate mouse position in normalized device coordinates
+            // (-1 to +1) for both components
+            console.log(event);
+            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        }
         function init() {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xE3E4E3);
@@ -41,7 +50,9 @@
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         // controls.addEventListener('change', renderer.domElement );
         controls.enableZoom = false;
-        controls.maxPolarAngle= Math.PI/2           // min angle thingy
+        controls.maxPolarAngle= Math.PI/2           // max angle thingy
+        controls.minPolarAngle= -Math.PI/2           // min angle thingy
+
 
                 
         camera.position.x = 0;
@@ -70,6 +81,8 @@
         // light4.position.set(-500,300,500);
         // scene.add(light4);
 
+        
+
 
         let loader = new THREE.GLTFLoader();
         loader.load('/models/scene.gltf', function(gltf){
@@ -78,7 +91,7 @@
             scene.add(gltf.scene);
             animate();
         });
-    
+
         // // generate cube
         // const geometry = new THREE.BoxGeometry( 2, 2, 2 );
         // // const texture = new THREE.TextureLoader().load('textures/crate.gif');
@@ -90,7 +103,6 @@
         // camera.position.z = 5;
 
         }
-
         function animate() {
 
             renderer.render(scene,camera);
@@ -100,6 +112,8 @@
             // cube.rotation.y += 0.01;
         }
         init();
+        window.addEventListener( 'click', onMouseDown, false );
+
     </script>
 </body>
 </html>

@@ -1,5 +1,4 @@
-let scene, camera, renderer, cube;
-
+let scene, camera, renderer;
 function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
@@ -10,18 +9,27 @@ function init() {
     );
 
     renderer = new THREE.WebGLRenderer({ antialias: true});
-
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
+    // let loader = new GLTFLoader();
+    // console.log(loader);
+    // loader.load('/models/scene.gltf', function(gltf){
+    // car = gltf.scene.children[0];
+    // car.scale.set(0.5,0.5,0.5);
+    // scene.add(gltf.scene);
+    // animate();
+    // });
+    
+    // generate cube
     const geometry = new THREE.BoxGeometry( 2, 2, 2 );
     const texture = new THREE.TextureLoader().load('textures/crate.gif');
-    const material = new THREE.MeshBasicMaterial({ map: texture });
-    // const material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
-
+    // const material = new THREE.MeshBasicMaterial({ map: texture });
+    const material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
     cube = new THREE.Mesh( geometry, material );
     scene.add( cube );
-
+    
+    // adjust camera position
     camera.position.z = 5;
 }
 

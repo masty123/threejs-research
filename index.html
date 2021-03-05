@@ -9,10 +9,10 @@
         body {
             margin: 0,
         }
-        canvas {
+        /* canvas {
             width: 100%;
             height: 100%;
-        }
+        } */
     </style>
 </head>
 <body>
@@ -20,100 +20,153 @@
     <!-- <script src="main.js"></script> -->
     <script src="GLTFLoader.js"></script>
     <script src="OrbitControls.js"></script>
+    <!-- <script src="Clock.js"></script> -->
 
     <script>
-        let scene, camera, renderer, controls, car;
-        const mouse = new THREE.Vector3();
+        let scene, camera, renderer, controls, car ;
+        let zoom = false;
 
+        const mouse = new THREE.Vector3();
+        const dummy = new THREE.Vector3();
+        const lookAtPos = new THREE.Vector3();
+        const FocusVector3 = new THREE.Vector3();
+        const raycaster = new THREE.Raycaster();
+        const step = 0.08;
+
+        function init() {
+
+            scene = new THREE.Scene();                      // initiate scene
+            scene.background = new THREE.Color(0xE3E4E3);   // set scene background color
+            camera = new THREE.PerspectiveCamera(
+                40,                                         // fov
+                window.innerWidth / window.innerHeight,     // aspect
+                0.1,                                        // near
+                5000,                                       // far
+            );
+
+            // initiate position
+            camera.position.x = 0;                          
+            camera.position.y = 1;
+            camera.position.z = 5;
+
+
+
+            renderer = new THREE.WebGLRenderer({ antialias: true});         // enable Anti-Alias
+            renderer.setSize(window.innerWidth, window.innerHeight);        // set window aspsect
+            document.body.appendChild(renderer.domElement);                 // apply to render??
+                
+            controls = new THREE.OrbitControls(camera, renderer.domElement);   // enable control for OrbitControls  
+            controls.enableZoom = false;                                       // zoom stuff
+            // controls.addEventListener('change', renderer.domElement );
+
+                    
+            hlight = new THREE.AmbientLight (0x404040,100);                     // ambient light
+            scene.add(hlight);                                                  // add ambient light to scene
+            
+            // lighting
+            directionalLight = new THREE.DirectionalLight(0xffffff,10);         // directional light
+            directionalLight.position.set(0,1,0);                               // directional light position
+            directionalLight.castShadow = true;                                 // cast shadow
+            scene.add(directionalLight);                                        // add directional light to add
+
+            // ---- light stuff ---- //
+            light = new THREE.PointLight(0xc4c4c4,1);
+            light.position.set(0,3,6);
+            scene.add(light);
+            light2 = new THREE.PointLight(0xc4c4c4,11);
+            light2.position.set(62.5,12.5,0);
+            scene.add(light2);
+            light3 = new THREE.PointLight(0xc4c4c4,1);
+            light3.position.set(0,12.5,-62.5);
+            scene.add(light3);
+            light4 = new THREE.PointLight(0xc4c4c4,1);
+            light4.position.set(-3,3,6);
+            scene.add(light4);
+            // --------------------- //
+            
+            // load the model
+            let loader = new THREE.GLTFLoader();
+            loader.load('/models/scene.gltf', function(gltf){
+                // console.log(gltf);
+                car = gltf.scene.children[0];
+                car.scale.set(0.5,0.5,0.5);
+                car.rotation.set(5,0,12);
+             
+                scene.add(car);
+                animate();
+            });
+
+            // // generate cube
+            // const geometry = new THREE.BoxGeometry( 2, 2, 2 );
+            // // const texture = new THREE.TextureLoader().load('textures/crate.gif');
+            // // const material = new THREE.MeshBasicMaterial({ map: texture });
+            // const material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
+            // cube = new THREE.Mesh( geometry, material );
+            // scene.add( cube );   
+            // // adjust camera position
+            // camera.position.z = 5;
+            //    controls.maxPolarAngle= Math.PI/2              // max angle thingy
+        }
+        function animate() {
+            renderer.render(scene,camera);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            // car.rotation.z -= 0.005;
+            // cube.rotation.x += 0.01;
+            // cube.rotation.y += 0.01;
+            
+            camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 20 : 40, step);
+            camera.position.lerp(dummy.set(
+                zoom ? FocusVector3.x : 0,          //    x-axis of camera position
+                zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
+                zoom ? 3: 3),                       //    z-axis of camera position
+                step                                //    time that camera lerp
+                )
+        
+            // lookAtPos.x = Math.sin(new Clock.getElapsedTime() * 2)       // camera sway?? dizzy as heck
+            camera.lookAt(lookAtPos)
+            camera.updateProjectionMatrix();
+            requestAnimationFrame(animate);
+            // controls.minPolarAngle= Math.PI/2           // min angle thingy
+
+        }
         function onMouseDown( event ) {
             // calculate mouse position in normalized device coordinates
             // (-1 to +1) for both components
-            console.log(event);
+
+            
             mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
             mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-        }
-        function init() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xE3E4E3);
-        camera = new THREE.PerspectiveCamera(
-            40,                                         // fov
-            window.innerWidth / window.innerHeight,     // aspect
-            0.1,                                        // near
-            5000,                                       // far
-        );
+            FocusVector3.set( mouse.x,  mouse.y, camera.position.z );         // set vector from pointer position
+            raycaster.setFromCamera(FocusVector3, camera);
 
+            // update the picking ray with the camera and mouse position
+            zoom = !zoom;
 
-        renderer = new THREE.WebGLRenderer({ antialias: true});
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
             
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-        // controls.addEventListener('change', renderer.domElement );
-        controls.enableZoom = false;
-        controls.maxPolarAngle= Math.PI/2           // max angle thingy
-        controls.minPolarAngle= -Math.PI/2           // min angle thingy
 
-
-                
-        camera.position.x = 0;
-        camera.position.y = 0.25;
-        camera.position.z = 4;
-
-        hlight = new THREE.AmbientLight (0x404040,100);
-        scene.add(hlight);
-        
-        // lighting
-        directionalLight = new THREE.DirectionalLight(0xffffff,10);
-        directionalLight.position.set(0,1,0);
-        directionalLight.castShadow = true;
-        scene.add(directionalLight);
-
-        // light = new THREE.PointLight(0xc4c4c4,10);
-        // light.position.set(0,300,500);
-        // scene.add(light);
-        // light2 = new THREE.PointLight(0xc4c4c4,10);
-        // light2.position.set(500,100,0);
-        // scene.add(light2);
-        // light3 = new THREE.PointLight(0xc4c4c4,10);
-        // light3.position.set(0,100,-500);
-        // scene.add(light3);
-        // light4 = new THREE.PointLight(0xc4c4c4,10);
-        // light4.position.set(-500,300,500);
-        // scene.add(light4);
-
-        
-
-
-        let loader = new THREE.GLTFLoader();
-        loader.load('/models/scene.gltf', function(gltf){
-            car = gltf.scene.children[0];
-            car.scale.set(0.5,0.5,0.5);
-            scene.add(gltf.scene);
-            animate();
-        });
-
-        // // generate cube
-        // const geometry = new THREE.BoxGeometry( 2, 2, 2 );
-        // // const texture = new THREE.TextureLoader().load('textures/crate.gif');
-        // // const material = new THREE.MeshBasicMaterial({ map: texture });
-        // const material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
-        // cube = new THREE.Mesh( geometry, material );
-        // scene.add( cube );   
-        // // adjust camera position
-        // camera.position.z = 5;
-
+            // // calculate objects intersecting the picking ray
+            // const intersects = raycaster.intersectObjects( scene.children, true );
+            // console.log(intersects);
+            // for ( let i = 0; i < intersects.length; i ++ ) {
+            //         if(intersects[i]){
+            //             zoom = !zoom;
+            //         }
+            // }         
         }
-        function animate() {
-
-            renderer.render(scene,camera);
-            requestAnimationFrame(animate);
-            car.rotation.z -= 0.005;
-            // cube.rotation.x += 0.01;
-            // cube.rotation.y += 0.01;
+        function onWindowReisze() {
+            camera.aspect = window.innerWidth/ window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
+
+     
+       
         init();
-        window.addEventListener( 'click', onMouseDown, false );
 
+        // window.addEventListener( 'mousemove', onMouseDown, false );
+        window.addEventListener( "click", onMouseDown, false );
+        window.addEventListener( "resize", onWindowReisze, false);
+        // window.requestAnimationFrame(render);
     </script>
 </body>
 </html>

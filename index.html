@@ -20,18 +20,19 @@
     <!-- <script src="main.js"></script> -->
     <script src="GLTFLoader.js"></script>
     <script src="OrbitControls.js"></script>
-    <!-- <script src="Clock.js"></script> -->
+    <script src="Tween.js"></script>
 
     <script>
         let scene, camera, renderer, controls, car ;
         let zoom = false;
 
-        const mouse = new THREE.Vector3();
+        var mouse = new THREE.Vector3();
         const dummy = new THREE.Vector3();
         const lookAtPos = new THREE.Vector3();
-        const FocusVector3 = new THREE.Vector3();
+        var FocusVector3 = new THREE.Vector3();
         const raycaster = new THREE.Raycaster();
         const step = 0.08;
+        var p;
 
         function init() {
 
@@ -58,7 +59,7 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);   // enable control for OrbitControls  
             controls.enableZoom = false;                                       // zoom stuff
             // controls.addEventListener('change', renderer.domElement );
-
+            
                     
             hlight = new THREE.AmbientLight (0x404040,100);                     // ambient light
             scene.add(hlight);                                                  // add ambient light to scene
@@ -69,19 +70,19 @@
             directionalLight.castShadow = true;                                 // cast shadow
             scene.add(directionalLight);                                        // add directional light to add
 
-            // ---- light stuff ---- //
-            light = new THREE.PointLight(0xc4c4c4,1);
-            light.position.set(0,3,6);
-            scene.add(light);
-            light2 = new THREE.PointLight(0xc4c4c4,11);
-            light2.position.set(62.5,12.5,0);
-            scene.add(light2);
-            light3 = new THREE.PointLight(0xc4c4c4,1);
-            light3.position.set(0,12.5,-62.5);
-            scene.add(light3);
-            light4 = new THREE.PointLight(0xc4c4c4,1);
-            light4.position.set(-3,3,6);
-            scene.add(light4);
+            // // ---- light stuff ---- //
+            // light = new THREE.PointLight(0xc4c4c4,1);
+            // light.position.set(0,3,6);
+            // scene.add(light);
+            // light2 = new THREE.PointLight(0xc4c4c4,11);
+            // light2.position.set(62.5,12.5,0);
+            // scene.add(light2);
+            // light3 = new THREE.PointLight(0xc4c4c4,1);
+            // light3.position.set(0,12.5,-62.5);
+            // scene.add(light3);
+            // light4 = new THREE.PointLight(0xc4c4c4,1);
+            // light4.position.set(-3,3,6);
+            // scene.add(light4);
             // --------------------- //
             
             // load the model
@@ -112,18 +113,26 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             // car.rotation.z -= 0.005;
             // cube.rotation.x += 0.01;
-            // cube.rotation.y += 0.01;
+            // cube.rotation.y += 0.01; 
+            // backup original rotation
             
-            camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 20 : 40, step);
+            
+            camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 30 : 40, step);
             camera.position.lerp(dummy.set(
                 zoom ? FocusVector3.x : 0,          //    x-axis of camera position
                 zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
-                zoom ? 3: 3),                       //    z-axis of camera position
+                zoom ? FocusVector3.z + 1.5 : 3),                       //    z-axis of camera position
                 step                                //    time that camera lerp
                 )
+          
+            camera.lookAt(
+                zoom ? FocusVector3.x : 0, 
+                zoom ? FocusVector3.y : 0 , 
+                zoom ? FocusVector3.z : 0 
+            )
         
             // lookAtPos.x = Math.sin(new Clock.getElapsedTime() * 2)       // camera sway?? dizzy as heck
-            camera.lookAt(lookAtPos)
+            // camera.lookAt(lookAtPos)
             camera.updateProjectionMatrix();
             requestAnimationFrame(animate);
             // controls.minPolarAngle= Math.PI/2           // min angle thingy
@@ -131,17 +140,40 @@
         }
         function onMouseDown( event ) {
             // calculate mouse position in normalized device coordinates
-            // (-1 to +1) for both components
-
-            
+            // (-1 to +1) for both components   
+            // console.log(scene); 
             mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
             mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-            FocusVector3.set( mouse.x,  mouse.y, camera.position.z );         // set vector from pointer position
+            raycaster.setFromCamera(mouse, camera);
+            var intersects = raycaster.intersectObjects(scene.children, true);
+            if(intersects.length > 0){
+                // for(let i = 0 ; i < intersects.length ; i++){
+                    // console.log(intersects[i]);
+                    // p = intersects[i].point;
+                    // intersects[ i ].object.material.color.set( 0xff0000 );
+                    // FocusVector3 = intersects[i].face.normal.clone();
+                    // FocusVector3.multiplyScalar(10);
+                    // FocusVector3.add(intersects[i].point);
+                    // camera.lookAt(p);
+                    console.log(scene.children);
+                    console.log(intersects[2]);
+                    FocusVector3.set( intersects[2].point.x,  intersects[2].point.y, intersects[2].point.z );         // set vector from pointer position
+                // }
+            }
+
+            // FocusVector3 = intersects[0].face.normal.clone();
+            // FocusVector3.multiplyScalar(10);
+            // FocusVector3.add(intersects[0].point);
+            // camera.position.copy(FocusVector3);
+            // camera.lookAt(p);
+
+            // FocusVector3.set( mouse.x,  mouse.y, 1 );         // set vector from pointer position
             raycaster.setFromCamera(FocusVector3, camera);
 
-            // update the picking ray with the camera and mouse position
+            // // update the picking ray with the camera and mouse position
             zoom = !zoom;
-
+            // console.log(camera);
+            // console.log(scene);
             
 
             // // calculate objects intersecting the picking ray

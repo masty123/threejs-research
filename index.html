@@ -30,9 +30,14 @@
         const dummy = new THREE.Vector3();
         const lookAtPos = new THREE.Vector3();
         var FocusVector3 = new THREE.Vector3();
+        var FocusQuoternion = new THREE.Quaternion();
         const raycaster = new THREE.Raycaster();
         const step = 0.08;
         var p;
+        var startRotation;
+        var endRotation;
+      
+
 
         function init() {
 
@@ -49,6 +54,7 @@
             camera.position.x = 0;                          
             camera.position.y = 1;
             camera.position.z = 5;
+            // notzoomed = camera;
 
 
 
@@ -106,6 +112,7 @@
             // scene.add( cube );   
             // // adjust camera position
             // camera.position.z = 5;
+
             //    controls.maxPolarAngle= Math.PI/2              // max angle thingy
         }
         function animate() {
@@ -118,24 +125,32 @@
             
             
             camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 30 : 40, step);
-            camera.position.lerp(dummy.set(
-                zoom ? FocusVector3.x : 0,          //    x-axis of camera position
-                zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
-                zoom ? FocusVector3.z + 1.5 : 3),                       //    z-axis of camera position
-                step                                //    time that camera lerp
-                )
-          
+           
             camera.lookAt(
                 zoom ? FocusVector3.x : 0, 
                 zoom ? FocusVector3.y : 0 , 
                 zoom ? FocusVector3.z : 0 
             )
+            camera.position.lerp(dummy.set(
+                zoom ? FocusVector3.x : 0,          //    x-axis of camera position
+                zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
+                zoom ? FocusVector3.z + 1.35 : 3),  //    z-axis of camera position
+                step                                //    time that camera lerp
+                )
+
+
+            if(zoom){
+                // Tween
+                new TWEEN.Tween( camera.rotation ).to( { rotation: endRotation }, 600 ).start();
+            }
         
-            // lookAtPos.x = Math.sin(new Clock.getElapsedTime() * 2)       // camera sway?? dizzy as heck
-            // camera.lookAt(lookAtPos)
             camera.updateProjectionMatrix();
             requestAnimationFrame(animate);
+
             // controls.minPolarAngle= Math.PI/2           // min angle thingy
+
+
+          
 
         }
         function onMouseDown( event ) {
@@ -147,43 +162,26 @@
             raycaster.setFromCamera(mouse, camera);
             var intersects = raycaster.intersectObjects(scene.children, true);
             if(intersects.length > 0){
-                // for(let i = 0 ; i < intersects.length ; i++){
-                    // console.log(intersects[i]);
-                    // p = intersects[i].point;
-                    // intersects[ i ].object.material.color.set( 0xff0000 );
-                    // FocusVector3 = intersects[i].face.normal.clone();
-                    // FocusVector3.multiplyScalar(10);
-                    // FocusVector3.add(intersects[i].point);
-                    // camera.lookAt(p);
-                    console.log(scene.children);
-                    console.log(intersects[2]);
-                    FocusVector3.set( intersects[2].point.x,  intersects[2].point.y, intersects[2].point.z );         // set vector from pointer position
-                // }
+                    // console.log(scene.children);
+                    // console.log(intersects[2]);
+                    if(intersects[2]){
+                        FocusVector3.set( intersects[2].point.x,  intersects[2].point.y, intersects[2].point.z );         // set vector from pointer position
+                        FocusQuoternion = intersects[2].object.quaternion;
+                    }
+                   
             }
 
-            // FocusVector3 = intersects[0].face.normal.clone();
-            // FocusVector3.multiplyScalar(10);
-            // FocusVector3.add(intersects[0].point);
-            // camera.position.copy(FocusVector3);
-            // camera.lookAt(p);
 
-            // FocusVector3.set( mouse.x,  mouse.y, 1 );         // set vector from pointer position
+            // camera.lookAt( camera.position.x, camera.position.y, camera.position.z ); 
+            // notzoomed = new THREE.Quaternion().copy( camera.quaternion );
+            // console.log(notzoomed);
+            // camera.lookAt( FocusVector3.x, FocusVector3.y, FocusVector3.z );
+            // zoomed = new THREE.Quaternion().copy( camera.quaternion );
+            // console.log(zoomed);
+
+
             raycaster.setFromCamera(FocusVector3, camera);
-
-            // // update the picking ray with the camera and mouse position
             zoom = !zoom;
-            // console.log(camera);
-            // console.log(scene);
-            
-
-            // // calculate objects intersecting the picking ray
-            // const intersects = raycaster.intersectObjects( scene.children, true );
-            // console.log(intersects);
-            // for ( let i = 0; i < intersects.length; i ++ ) {
-            //         if(intersects[i]){
-            //             zoom = !zoom;
-            //         }
-            // }         
         }
         function onWindowReisze() {
             camera.aspect = window.innerWidth/ window.innerHeight;

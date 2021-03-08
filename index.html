@@ -34,8 +34,11 @@
         const raycaster = new THREE.Raycaster();
         const step = 0.08;
         var p;
-        var startRotation;
-        var endRotation;
+
+        var q1, q2;
+        var time=0, dt=0;
+        // var startRotation;
+        // var endRotation;
       
 
 
@@ -118,17 +121,17 @@
         function animate() {
             renderer.render(scene,camera);
             renderer.setSize(window.innerWidth, window.innerHeight);
+            // requestAnimationFrame(animate);  
             // car.rotation.z -= 0.005;
             // cube.rotation.x += 0.01;
             // cube.rotation.y += 0.01; 
             // backup original rotation
             
             
-            camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 30 : 40, step);
-           
+            camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 30 : 40, step);      
             camera.lookAt(
                 zoom ? FocusVector3.x : 0, 
-                zoom ? FocusVector3.y : 0 , 
+                zoom ? FocusVector3.y : 0, 
                 zoom ? FocusVector3.z : 0 
             )
             camera.position.lerp(dummy.set(
@@ -136,13 +139,22 @@
                 zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
                 zoom ? FocusVector3.z + 1.35 : 3),  //    z-axis of camera position
                 step                                //    time that camera lerp
-                )
+            )
+
+            // dt=0.01; // changed
+            // time += dt; 
+            // if(zoom == true){                 
+            //     THREE.Quaternion.slerp( q1, q2, camera.quaternion, time ); // added
+            //     renderer.render(scene, camera);  
+            //     if (time > 1) time = 0;  // changed       
+            // }else {
+            //     THREE.Quaternion.slerp( camera.quaternion, camera.quaternion, camera.quaternion, time ); // added
+            //     renderer.render(scene, camera);  
+            //     // if (time > 1) time = 0;  // changed 
+            // }
 
 
-            if(zoom){
-                // Tween
-                new TWEEN.Tween( camera.rotation ).to( { rotation: endRotation }, 600 ).start();
-            }
+            
         
             camera.updateProjectionMatrix();
             requestAnimationFrame(animate);
@@ -166,11 +178,14 @@
                     // console.log(intersects[2]);
                     if(intersects[2]){
                         FocusVector3.set( intersects[2].point.x,  intersects[2].point.y, intersects[2].point.z );         // set vector from pointer position
-                        FocusQuoternion = intersects[2].object.quaternion;
+                        // FocusQuoternion = intersects[2].object.quaternion;
+                        // camera.lookAt( camera.position ); 
+                        // q1 = new THREE.Quaternion().copy( camera.quaternion );
+                        // camera.lookAt( FocusVector3 ); 
+                        // q2 = new THREE.Quaternion().copy( camera.quaternion );
                     }
                    
             }
-
 
             // camera.lookAt( camera.position.x, camera.position.y, camera.position.z ); 
             // notzoomed = new THREE.Quaternion().copy( camera.quaternion );
@@ -178,7 +193,6 @@
             // camera.lookAt( FocusVector3.x, FocusVector3.y, FocusVector3.z );
             // zoomed = new THREE.Quaternion().copy( camera.quaternion );
             // console.log(zoomed);
-
 
             raycaster.setFromCamera(FocusVector3, camera);
             zoom = !zoom;

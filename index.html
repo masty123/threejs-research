@@ -22,26 +22,23 @@
     <script src="OrbitControls.js"></script>
     <script src="Tween.js"></script>
 
-    <script>
-        let scene, camera, renderer, controls, car ;
-        let zoom = false;
+    <!-- <script>
+        var scene, camera, renderer, controls, car ;
+        var zoom = false;
 
-        var mouse = new THREE.Vector3();
-        const dummy = new THREE.Vector3();
-        const lookAtPos = new THREE.Vector3();
+        var mouse = new THREE.Vector2();
+        var dummy = new THREE.Vector3();
+        var lookAtPos = new THREE.Vector3();
         var FocusVector3 = new THREE.Vector3();
         var FocusQuoternion = new THREE.Quaternion();
-        const raycaster = new THREE.Raycaster();
-        const step = 0.08;
-        var p;
-
-        var q1, q2;
-        var time=0, dt=0;
+        var raycaster = new THREE.Raycaster();
+        var step = 0.04;
+        
         // var startRotation;
         // var endRotation;
       
 
-
+        // initiating stuff on load..
         function init() {
 
             scene = new THREE.Scene();                      // initiate scene
@@ -61,9 +58,9 @@
 
 
 
-            renderer = new THREE.WebGLRenderer({ antialias: true});         // enable Anti-Alias
-            renderer.setSize(window.innerWidth, window.innerHeight);        // set window aspsect
-            document.body.appendChild(renderer.domElement);                 // apply to render??
+            renderer = new THREE.WebGLRenderer({ antialias: true});            // enable Anti-Alias
+            renderer.setSize(window.innerWidth, window.innerHeight);           // set window aspsect
+            document.body.appendChild(renderer.domElement);                    // apply to render??
                 
             controls = new THREE.OrbitControls(camera, renderer.domElement);   // enable control for OrbitControls  
             controls.enableZoom = false;                                       // zoom stuff
@@ -92,7 +89,7 @@
             // light4 = new THREE.PointLight(0xc4c4c4,1);
             // light4.position.set(-3,3,6);
             // scene.add(light4);
-            // --------------------- //
+            // // --------------------- //
             
             // load the model
             let loader = new THREE.GLTFLoader();
@@ -112,12 +109,14 @@
             // // const material = new THREE.MeshBasicMaterial({ map: texture });
             // const material = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
             // cube = new THREE.Mesh( geometry, material );
-            // scene.add( cube );   
+            // cube.userData.originalColor = 0x0000ff;
+            // scene.add( cube );
             // // adjust camera position
             // camera.position.z = 5;
 
             //    controls.maxPolarAngle= Math.PI/2              // max angle thingy
         }
+        // animate in real time
         function animate() {
             renderer.render(scene,camera);
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -125,9 +124,7 @@
             // car.rotation.z -= 0.005;
             // cube.rotation.x += 0.01;
             // cube.rotation.y += 0.01; 
-            // backup original rotation
-            
-            
+            // backup original rotation   
             camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 30 : 40, step);      
             camera.lookAt(
                 zoom ? FocusVector3.x : 0, 
@@ -137,34 +134,18 @@
             camera.position.lerp(dummy.set(
                 zoom ? FocusVector3.x : 0,          //    x-axis of camera position
                 zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
-                zoom ? FocusVector3.z + 1.35 : 3),  //    z-axis of camera position
+                zoom ? FocusVector3.z + 1.35 : 5),  //    z-axis of camera position
                 step                                //    time that camera lerp
             )
 
-            // dt=0.01; // changed
-            // time += dt; 
-            // if(zoom == true){                 
-            //     THREE.Quaternion.slerp( q1, q2, camera.quaternion, time ); // added
-            //     renderer.render(scene, camera);  
-            //     if (time > 1) time = 0;  // changed       
-            // }else {
-            //     THREE.Quaternion.slerp( camera.quaternion, camera.quaternion, camera.quaternion, time ); // added
-            //     renderer.render(scene, camera);  
-            //     // if (time > 1) time = 0;  // changed 
-            // }
+            // render();
 
-
-            
-        
             camera.updateProjectionMatrix();
             requestAnimationFrame(animate);
 
             // controls.minPolarAngle= Math.PI/2           // min angle thingy
-
-
-          
-
         }
+        // click to zoom on specific part of the model
         function onMouseDown( event ) {
             // calculate mouse position in normalized device coordinates
             // (-1 to +1) for both components   
@@ -174,8 +155,8 @@
             raycaster.setFromCamera(mouse, camera);
             var intersects = raycaster.intersectObjects(scene.children, true);
             if(intersects.length > 0){
-                    // console.log(scene.children);
-                    // console.log(intersects[2]);
+                    console.log(scene.children);
+                    console.log(intersects[2]);
                     if(intersects[2]){
                         FocusVector3.set( intersects[2].point.x,  intersects[2].point.y, intersects[2].point.z );         // set vector from pointer position
                         // FocusQuoternion = intersects[2].object.quaternion;
@@ -197,20 +178,219 @@
             raycaster.setFromCamera(FocusVector3, camera);
             zoom = !zoom;
         }
-        function onWindowReisze() {
+        //resize window based on the browser window (dynamic)...?
+        function onWindowResize() {
             camera.aspect = window.innerWidth/ window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-     
-       
-        init();
 
-        // window.addEventListener( 'mousemove', onMouseDown, false );
+        init();
+        animate();
+
         window.addEventListener( "click", onMouseDown, false );
-        window.addEventListener( "resize", onWindowReisze, false);
-        // window.requestAnimationFrame(render);
+        window.addEventListener(    "resize", onWindowResize, false);
+    </script> -->
+
+    <script>
+
+    //GLOBAL VARS
+    var scene, camera, renderer, cube, car, controls;
+    var zoom = false;
+    var raycaster, mouse;
+
+    var dummy = new THREE.Vector3();
+    var lookAtPos = new THREE.Vector3();
+    var FocusVector3 = new THREE.Vector3();
+    var FocusQuoternion = new THREE.Quaternion();
+    var raycaster = new THREE.Raycaster();
+    var step = 0.04;
+
+    var model;
+
+
+    // once everything is loaded, we run our Three.js stuff.
+    function init() {
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        scene = new THREE.Scene();
+
+        //SET CAMERA
+        
+        scene = new THREE.Scene();                      // initiate scene
+        scene.background = new THREE.Color(0xE3E4E3);   // set scene background color
+        camera = new THREE.PerspectiveCamera(
+                40,                                         // fov
+                window.innerWidth / window.innerHeight,     // aspect
+                0.1,                                        // near
+                5000,                                       // far
+        );
+
+        // create a render and set the size
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(window.innerWidth, window.innerHeight);           // set window aspsect
+        //bind rendered to the dom element
+        document.body.appendChild(renderer.domElement);  
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);   // enable control for OrbitControls  
+        controls.enableZoom = false;                                       // zoom stuff
+
+        //RAYCASTER
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2(1,1);
+
+
+
+        // // create a cube
+        // var cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+        // var cubeMaterial = new THREE.MeshLambertMaterial({color: 0xffff00 }); //0xF7F7F7 = gray
+        // cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        // cube.userData.originalColor = 0xffff00;
+
+        // // position the cube
+        // cube.position.x = 0;
+        // cube.position.y = 0;
+        // cube.position.z = 0;
+        // scene.add(cube);
+
+        // load the model
+        let loader = new THREE.GLTFLoader();
+        loader.load('/models/scene.gltf', function(gltf){
+            // console.log(gltf);
+            car = gltf.scene.children[0];
+            car.scale.set(0.5,0.5,0.5);
+            car.rotation.set(5,0,12);      
+            scene.add(car);
+            animate();
+        });
+
+
+        var hlight = new THREE.AmbientLight (0x404040,100);                     // ambient light
+        scene.add(hlight);                                                  // add ambient light to scene
+            
+        // lighting
+        var directionalLight = new THREE.DirectionalLight(0xffffff,10);         // directional light
+        directionalLight.position.set(0,1,0);                               // directional light position
+        directionalLight.castShadow = true;                                 // cast shadow
+        scene.add(directionalLight);   
+
+
+        // // ---- light stuff ---- //
+        // light = new THREE.PointLight(0xc4c4c4,1);
+        // light.position.set(0,3,6);
+        // scene.add(light);
+        // light2 = new THREE.PointLight(0xc4c4c4,11);
+        // light2.position.set(62.5,12.5,0);
+        // scene.add(light2);
+        // light3 = new THREE.PointLight(0xc4c4c4,1);
+        // light3.position.set(0,12.5,-62.5);
+        // scene.add(light3);
+        // light4 = new THREE.PointLight(0xc4c4c4,1);
+        // light4.position.set(-3,3,6);
+        // scene.add(light4);
+        // // --------------------- //
+
+     
+        // when the mouse moves, call the given function
+        
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        document.addEventListener( "click", onMouseDown, false );
+        window.addEventListener(    "resize", onWindowResize, false);
+    }
+
+    function onDocumentMouseMove(event)
+    {
+        // the following line would stop any other event handler from firing
+        // (such as the mouse's TrackballControls)
+        event.preventDefault();
+
+        // update the mouse variable
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    }
+    // click to zoom on specific part of the model
+    function onMouseDown( event ) {
+            // calculate mouse position in normalized device coordinates
+            // (-1 to +1) for both components   
+            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            var intersects = raycaster.intersectObjects(scene.children, true);
+            // console.log(intersects);
+
+            if(intersects.length > 0){
+                    // box case test
+                    // if(intersects.length > 0 && intersects[ 0 ].object === cube ){           
+                        FocusVector3.set( intersects[0].point.x,  intersects[0].point.y, intersects[0].point.z );            // set vector from pointer position
+                    // }                      
+            }
+            raycaster.setFromCamera(FocusVector3, camera);
+            zoom = !zoom;
+        }
+    // animate in real time
+    function animate() {
+            renderer.render(scene,camera);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            // requestAnimationFrame(animate);  
+            // car.rotation.z -= 0.005;
+            // cube.rotation.x += 0.01;
+            // cube.rotation.y += 0.01; 
+            // backup original rotation   
+            camera.fov = THREE.MathUtils.lerp(camera.fov, zoom ? 30 : 40, step);      
+            camera.lookAt(
+                zoom ? FocusVector3.x : 0, 
+                zoom ? FocusVector3.y : 0, 
+                zoom ? FocusVector3.z : 0 
+            )
+            camera.position.lerp(dummy.set(
+                zoom ? FocusVector3.x : 0,          //    x-axis of camera position
+                zoom ? FocusVector3.y : 0.75,       //    y-axis of camera position
+                zoom ? FocusVector3.z + 1.35 : 5),  //    z-axis of camera position
+                step                                //    time that camera lerp
+            )
+
+            render();
+
+            camera.updateProjectionMatrix();
+            requestAnimationFrame(animate);
+
+            // controls.minPolarAngle= Math.PI/2           // min angle thingy
+        }
+    function render() 
+    {
+        // update the picking ray with the camera and mouse position
+        raycaster.setFromCamera( mouse, camera );
+        // calculate objects intersecting the picking ray
+        var intersects = raycaster.intersectObjects( scene.children, true );
+        // console.log(scene.children);
+        // // box case test
+        // if ( intersects.length > 0  ) {cube.material.color.set( 0xff0000 ); } 
+        // else { cube.material.color.set( cube.userData.originalColor );}
+
+        // car case 
+        // if(intersects.length > 0 ){
+        //     console.log("hit something");
+        //     for(let i = 0 ; i < intersects.length ; i++){
+        //             intersects[i].object.material.color.set("red");
+        //     }
+        // } else { 
+        //     console.log(car);
+        // }
+
+        renderer.render(scene, camera);
+    }  
+    function onWindowResize() {
+            camera.aspect = window.innerWidth/ window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    init();
+    animate(); //calling function that does all the rendering 
+
     </script>
+
 </body>
 </html>
